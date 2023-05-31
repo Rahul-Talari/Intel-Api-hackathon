@@ -2,7 +2,7 @@
 
 #### Team Name          : TEAM MARINES 
 #### Problem Statement  : MEDICAL IMAGE PROCESSING
-#### Team Leader Email  : Rahultalari737@gmail.com
+#### Team Leader Email  : rahultalari737@gmail.com
 #### Team members email : 
 #### Ramganeshlankada@gmail.com
 #### mayankgla21@gmail.com
