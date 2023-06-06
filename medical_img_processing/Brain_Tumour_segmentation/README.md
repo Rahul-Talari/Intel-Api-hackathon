@@ -2,8 +2,7 @@
 You can view the detailed tear down analysis of this here : https://maroon-profit-6d5.notion.site/Intel-One-API-Medical-image-processing-application-e5c350a6a1b143c48bed05a6d1f73fc0?pvs=4
 
 ## Visualize Brain tumour here : 
-- [Show me the brain tumour visualization](https://github.com/Rahul-Talari/Intel-Api-hackathon/medical_img_processing/Brain_Tumour_segmentation
-/scatter_plot.png.html)
+- Visualize brain tumour 3D plot using this file (visualize_brain_tumour.html) in this folder 
 
 ## Code wall time Benchmarking
 https://www.notion.so/Intel-One-API-Medical-image-processing-application-e5c350a6a1b143c48bed05a6d1f73fc0?pvs=4#fb9d3da542f940f695b9d53d4c73a845
