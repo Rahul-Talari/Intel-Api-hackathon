@@ -1,25 +1,15 @@
 # Brain tumour segmentation
 You can view the detailed tear down analysis of this here : https://maroon-profit-6d5.notion.site/Intel-One-API-Medical-image-processing-application-e5c350a6a1b143c48bed05a6d1f73fc0?pvs=4
 
+## Visualize Brain tumour here : 
+- [Show me the brain tumour visualization](https://github.com/Rahul-Talari/Intel-Api-hackathon/medical_img_processing/Brain_Tumour_segmentation
+/scatter_plot.png.html)
+
 ## Code wall time Benchmarking
 https://www.notion.so/Intel-One-API-Medical-image-processing-application-e5c350a6a1b143c48bed05a6d1f73fc0?pvs=4#fb9d3da542f940f695b9d53d4c73a845
-+----------------------+--------------+
-| Times                |        Value |
-+======================+==============+
-| Data loading         |    0.234289  |
-+----------------------+--------------+
-| data preprocessing   |    0.117548  |
-+----------------------+--------------+
-| Stratification       |    0.0262754 |
-+----------------------+--------------+
-| Model training       |    1172.9    |
-+----------------------+--------------+
-| tumour predction     |    27.668    |
-+----------------------+--------------+
-| tumour visualization |    2.3129    |
-+----------------------+--------------+
-| total code wall time |    1391.44   |
-+----------------------+--------------+
+![wall_time](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/cba9045e-6539-49f5-825b-49142b1b80bb)
+![wall_time_graph](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/56ea0c1e-d91e-40e8-9bf1-e9325f4e722e)
+
 
 ## Optimization pathways
 
