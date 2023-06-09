@@ -12,6 +12,11 @@
 link : https://www.linkedin.com/posts/ram-ganesh-1b2189208_activity-7073002717509537792-rBJg/?utm_source=share&utm_medium=member_desktop
 
 ## A Brief of the Prototype:
+
+#### Benchmarking
+![wall_time](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/69ee67e7-be30-44ef-9826-3926b39efeb7)
+
+
 #### General Un-optimized code 
 The Medical image processing application prototype consists of 3 main categories they are : 
 - Brain Tumour Segmentation 
@@ -31,7 +36,7 @@ Python --> C++ conversion --> DPC++ conversion --> SYCL conversion --> Intel Adv
 
 All the intel optimized SYCL/DPC++ codes are present in `INTEL_ONE_API_medical_img_processing` folder. 
 
-##### Intel Advisor Analysis
+#### Intel Advisor Analysis
 
 Detailed analysis of Intel Advisor for SYCL/DPC++ Pneumonia Detection is categoried into : 
 - Offload Modelling
