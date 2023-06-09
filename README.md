@@ -6,7 +6,7 @@
 #### Team members email : 
 #### Ramganeshlankada@gmail.com
 #### mayankgla21@gmail.com
-#### srinub@gvpce.ac.in ( Professionl ) 
+#### srinub@gvpce.ac.in ( Professional ) 
 
 ## Prototype Video 
 link : https://www.linkedin.com/posts/ram-ganesh-1b2189208_activity-7073002717509537792-rBJg/?utm_source=share&utm_medium=member_desktop
@@ -39,27 +39,32 @@ Detailed analysis of Intel Advisor for SYCL/DPC++ Pneumonia Detection is categor
 - Vector optimization 
 - Roofline Analysis
 
-**Images** ; 
+**Images** : 
+
 **Offload Modelling**
+
 ![main](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/1077cd3d-7c76-450c-84fc-8109234e1d4a)
 ![top_non_offloaded](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/feedb475-3d84-46db-a7f4-a16325dcdcbc)
 ![top_offloaded](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/e9af11ea-c096-455c-9078-0053f3dc8f73)
 
 **Vectorization**
+
 ![Vectorization](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/5cbe29e6-4db9-4206-87c4-44cd0d7fcd04)
 
 **Threading**
+
 ![Threading](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/06d66cad-c390-467f-b708-35709da1214a)
 ![Threading2](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/5039ea3e-03e5-4016-9ef4-3b8f06e11542)
 ![Threading3](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/9dcd136f-a49f-40a1-8702-c9680879761d)
 
 **Acceleration**
+
 ![acceleration](https://github.com/Rahul-Talari/Intel-Api-hackathon/assets/91232198/67ed9a4e-91e1-41cd-ab0e-6cf68064b3a9)
 
 
 ## Tech Stack: 
 
-**Machine learning Stack **
+**Machine learning Stack**
 - Tensorflow
 - Keras
 - PyTorch
