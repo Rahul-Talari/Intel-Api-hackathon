@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OHIF Viewer Embed</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      #ohifViewer {
+        width: 100%;
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="ohifViewer"></div>
+
+    <script src="https://unpkg.com/@ohif/viewer@3.0.0/dist/ohifViewer.js"></script>
+    <script>
+      // Initialize OHIF Viewer
+      const viewerConfig = {
+        servers: {
+          dicomWeb: [
+            {
+              name: 'Orthanc',
+              wadoUriRoot: 'http://orthanc-server.com/wado',
+              qidoRoot: 'http://orthanc-server.com/dicom-web',
+              wadoRoot: 'http://orthanc-server.com/dicom-web',
+              qidoSupportsIncludeField: true,
+              imageRendering: 'wadors',
+              thumbnailRendering: 'wadors',
+            },
+          ],
+        },
+      };
+      OHIFViewer.StandaloneViewer('ohifViewer', viewerConfig);
+    </script>
+  </body>
+</html>
+ 
