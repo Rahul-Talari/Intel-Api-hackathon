@@ -1,0 +1,158 @@
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "dirent.h"
+#include "image_classifier.h"
+
+
+#include <CL/sycl.hpp>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <filesystem>
+
+namespace sycl = cl::sycl;
+namespace fs = std::filesystem;
+
+#include <CL/sycl.hpp>
+#include <dirent.h>
+
+namespace sycl = cl::sycl;
+
+class getAllImageFilesKernel {
+public:
+  getAllImageFilesKernel(const std::string &img_dir,
+                         std::vector<std::string> &img_names)
+      : img_dir_(img_dir), img_names_(img_names) {}
+
+  void operator()(sycl::handler &cgh) {
+    cgh.parallel_for<class getAllImageFilesKernel>(
+        sycl::range<1>(1), [=](sycl::id<1>) {
+          DIR *dir;
+          struct dirent *ent;
+          if ((dir = opendir(img_dir_.c_str())) != NULL) {
+            while ((ent = readdir(dir)) != NULL) {
+              std::string filename(ent->d_name);
+              if (filename == "." || filename == "..")
+                continue;
+              img_names_.push_back(filename);
+            }
+            closedir(dir);
+          } else {
+            // Failed to open directory
+            perror("");
+            exit(EXIT_FAILURE);
+          }
+        });
+  }
+
+private:
+  const std::string &img_dir_;
+  std::vector<std::string> &img_names_;
+};
+
+void getAllImageFiles(const std::string &img_dir,
+                      std::vector<std::string> &img_names) {
+  sycl::queue queue;
+  queue.submit([&](sycl::handler &cgh) {
+    cgh.single_task<getAllImageFilesKernel>([=]() {
+      getAllImageFilesKernel kernel(img_dir, img_names);
+      kernel(cgh);
+    });
+  });
+  queue.wait_and_throw();
+}
+
+
+#include <CL/sycl.hpp>
+#include <dirent.h>
+
+namespace sycl = cl::sycl;
+
+class ImageClassifier {
+public:
+  ImageClassifier(const std::string &model_path) {
+    // Initialize image classifier with the given model
+    // You need to implement this function or use an existing image classifier library compatible with SYCL/DPC++
+  }
+
+  int Inference(const std::string &img_path) {
+    // Perform inference on the given image path and return the predicted class index
+    // You need to implement this function or use an existing image classifier library compatible with SYCL/DPC++
+    return 0; // Placeholder return value
+  }
+};
+
+class getAllImageFilesKernel {
+public:
+  getAllImageFilesKernel(const std::string &img_dir,
+                         std::vector<std::string> &img_names)
+      : img_dir_(img_dir), img_names_(img_names) {}
+
+  void operator()(sycl::handler &cgh) {
+    cgh.parallel_for<class getAllImageFilesKernel>(
+        sycl::range<1>(1), [=](sycl::id<1>) {
+          DIR *dir;
+          struct dirent *ent;
+          if ((dir = opendir(img_dir_.c_str())) != NULL) {
+            while ((ent = readdir(dir)) != NULL) {
+              std::string filename(ent->d_name);
+              if (filename == "." || filename == "..")
+                continue;
+              img_names_.push_back(filename);
+            }
+            closedir(dir);
+          } else {
+            // Failed to open directory
+            perror("");
+            exit(EXIT_FAILURE);
+          }
+        });
+  }
+
+private:
+  const std::string &img_dir_;
+  std::vector<std::string> &img_names_;
+};
+
+int main(int argc, char **argv) {
+  std::string img_dir("../images/");
+  std::vector<std::string> img_names;
+
+  sycl::queue queue;
+  queue.submit([&](sycl::handler &cgh) {
+    sycl::stream os(1024, 256, cgh);
+    cgh.single_task<class MainKernel>([=]() {
+      // Create image classifier
+      ImageClassifier ic("../models/image_classifier.onnx");
+
+      // Get image files
+      getAllImageFilesKernel fileKernel(img_dir, img_names);
+      fileKernel(cgh);
+
+      // Classes
+      std::vector<std::string> classes = {"plane", "car",  "bird", "cat",
+                                          "deer",  "dog",  "frog", "horse",
+                                          "ship",  "truck"};
+
+      os << "******* Prediction results below *******" << sycl::endl;
+      for (int i = 0; i < static_cast<int>(img_names.size()); ++i) {
+        std::string img_path = img_dir + img_names[i];
+        os << "Loaded image: " << img_path << sycl::endl;
+        int cls_idx = ic.Inference(img_path);
+        os << "Predicted class: " << classes[cls_idx] << sycl::endl
+           << sycl::endl;
+      }
+
+      os << "Successfully performed image classification" << sycl::endl;
+    });
+  });
+  queue.wait_and_throw();
+
+  return 0;
+}
+
+
+

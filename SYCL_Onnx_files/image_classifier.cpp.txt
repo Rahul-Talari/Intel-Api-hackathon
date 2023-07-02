@@ -1,0 +1,262 @@
+#include "image_classifier.h"
+
+#include <algorithm>
+
+namespace onnx = Ort;
+
+enum class ONNXTensorElementDataType {
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX64,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX128,
+    ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16
+};
+
+std::ostream& operator<<(std::ostream& os, const ONNXTensorElementDataType& type) {
+    switch (type) {
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UNDEFINED:
+            os << "undefined";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
+            os << "float";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8:
+            os << "uint8_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT8:
+            os << "int8_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT16:
+            os << "uint16_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT16:
+            os << "int16_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
+            os << "int32_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:
+            os << "int64_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_STRING:
+            os << "std::string";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_BOOL:
+            os << "bool";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT16:
+            os << "float16";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_DOUBLE:
+            os << "double";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT32:
+            os << "uint32_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT64:
+            os << "uint64_t";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX64:
+            os << "float real + float imaginary";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_COMPLEX128:
+            os << "double real + float imaginary";
+            break;
+        case ONNXTensorElementDataType::ONNX_TENSOR_ELEMENT_DATA_TYPE_BFLOAT16:
+            os << "bfloat16";
+            break;
+        default:
+            break;
+    }
+    return os;
+}
+
+
+class ImageClassifier {
+public:
+    ImageClassifier(const std::string& modelFilepath) {
+        /**************** Create ORT environment ******************/
+        std::string instanceName{"Image classifier inference"};
+        mEnv = std::make_shared<onnx::Env>(onnx::LoggingLevel::ORT_LOGGING_LEVEL_WARNING,
+                                           instanceName.c_str());
+
+        /**************** Create ORT session ******************/
+        // Set up options for session
+        onnx::SessionOptions sessionOptions;
+        // Enable CUDA
+        sessionOptions.AppendExecutionProvider_CUDA(onnx::CUDAProviderOptions{});
+        // Sets graph optimization level (Here, enable all possible optimizations)
+        sessionOptions.SetGraphOptimizationLevel(onnx::GraphOptimizationLevel::ORT_ENABLE_ALL);
+        // Create session by loading the onnx model
+        mSession = std::make_shared<onnx::Session>(*mEnv, modelFilepath.c_str(),
+                                                  sessionOptions);
+
+        /**************** Create allocator ******************/
+        // Allocator is used to get model information
+        onnx::AllocatorWithDefaultOptions allocator;
+
+        /**************** Input info ******************/
+        // Get the number of input nodes
+        size_t numInputNodes = mSession->GetInputCount();
+#ifdef VERBOSE
+        std::cout << "******* Model information below *******" << std::endl;
+        std::cout << "Number of Input Nodes: " << numInputNodes << std::endl;
+#endif
+
+        // Get the name of the input
+        // 0 means the first input of the model
+        // The example only has one input, so use 0 here
+        mInputName = mSession->GetInputName(0, allocator);
+#ifdef VERBOSE
+        std::cout << "Input Name: " << mInputName << std::endl;
+#endif
+
+        // Get the type of the input
+        // 0 means the first input of the model
+        onnx::TypeInfo inputTypeInfo = mSession->GetInputTypeInfo(0);
+        auto inputTensorInfo = inputTypeInfo.GetTensorTypeAndShapeInfo();
+        ONNXTensorElementDataType inputType = inputTensorInfo.GetElementType();
+#ifdef VERBOSE
+        std::cout << "Input Type: " << inputType << std::endl;
+#endif
+
+        // Get the shape of the input
+        mInputDims = inputTensorInfo.GetShape();
+#ifdef VERBOSE
+        std::cout << "Input Dimensions: " << mInputDims << std::endl;
+#endif
+
+        /**************** Output info ******************/
+        // Get the number of output nodes
+        size_t numOutputNodes = mSession->GetOutputCount();
+#ifdef VERBOSE
+        std::cout << "Number of Output Nodes: " << numOutputNodes << std::endl;
+#endif
+
+        // Get the name of the output
+        // 0 means the first output of the model
+        // The example only has one output, so use 0 here
+        mOutputName = mSession->GetOutputName(0, allocator);
+#ifdef VERBOSE
+        std::cout << "Output Name: " << mOutputName << std::endl;
+#endif
+
+        // Get the type of the output
+        // 0 means the first output of the model
+        onnx::TypeInfo outputTypeInfo = mSession->GetOutputTypeInfo(0);
+        auto outputTensorInfo = outputTypeInfo.GetTensorTypeAndShapeInfo();
+        ONNXTensorElementDataType outputType = outputTensorInfo.GetElementType();
+#ifdef VERBOSE
+        std::cout << "Output Type: " << outputType << std::endl;
+#endif
+
+        // Get the shape of the output
+        mOutputDims = outputTensorInfo.GetShape();
+#ifdef VERBOSE
+        std::cout << "Output Dimensions: " << mOutputDims << std::endl << std::endl;
+#endif
+    }
+
+
+
+private:
+    std::shared_ptr<onnx::Env> mEnv;
+    std::shared_ptr<onnx::Session> mSession;
+    std::string mInputName;
+    std::vector<int64_t> mInputDims;
+    std::string mOutputName;
+    std::vector<int64_t> mOutputDims;
+};
+
+
+
+int ImageClassifier::Inference(const std::string& imageFilepath) {
+    // Load input image
+    cv::Mat imageBGR = cv::imread(imageFilepath, cv::IMREAD_COLOR);
+
+    // Preprocessing
+    size_t inputTensorSize = vectorProduct(mInputDims);
+    std::vector<float> inputTensorValues(inputTensorSize);
+    CreateTensorFromImage(imageBGR, inputTensorValues);
+
+    // Assign memory for input tensor
+    std::vector<sycl::float4> inputBuffer(inputTensorSize / 4);
+    sycl::buffer<sycl::float4, 1> input(sycl::range<1>(inputBuffer.size()), inputBuffer.data());
+
+    // Copy input data to device
+    mQueue.submit([&](sycl::handler& cgh) {
+        auto accessor = input.get_access<sycl::access::mode::write>(cgh);
+        cgh.copy(inputTensorValues.data(), accessor);
+    });
+
+    // Create output buffer
+    size_t outputTensorSize = vectorProduct(mOutputDims);
+    std::vector<float> outputTensorValues(outputTensorSize);
+    std::vector<sycl::float4> outputBuffer(outputTensorSize / 4);
+    sycl::buffer<sycl::float4, 1> output(sycl::range<1>(outputBuffer.size()), outputBuffer.data());
+
+    // Run inference
+    mQueue.submit([&](sycl::handler& cgh) {
+        auto inputAccess = input.get_access<sycl::access::mode::read>(cgh);
+        auto outputAccess = output.get_access<sycl::access::mode::write>(cgh);
+
+        cgh.parallel_for(sycl::range<1>(outputBuffer.size()), [=](sycl::id<1> idx) {
+            // Perform inference operation here
+            // You need to adapt this part according to your specific inference logic
+            // Access inputAccess and outputAccess to perform the computation
+            // You may need to convert the data types or reshape the data as needed
+            // Example: outputAccess[idx] = inputAccess[idx] * 2.0f;
+        });
+    });
+
+    // Copy output data to host
+    std::vector<float> outputTensorValues(outputTensorSize);
+    mQueue.submit([&](sycl::handler& cgh) {
+        auto accessor = output.get_access<sycl::access::mode::read>(cgh);
+        cgh.copy(accessor, outputTensorValues.data());
+    });
+
+    // Postprocessing
+    float* floatarr = outputTensorValues.data();
+    int cls_idx = std::max_element(floatarr, floatarr + 10) - floatarr;
+
+    return cls_idx;
+}
+
+
+
+void ImageClassifier::CreateTensorFromImage(const cv::Mat& img, std::vector<float>& inputTensorValues) {
+    cv::Mat imageRGB, scaledImage, preprocessedImage;
+
+    // Preprocessing
+    img.convertTo(scaledImage, CV_32F, 2.0f / 255.0f, -1.0f);
+    cv::dnn::blobFromImage(scaledImage, preprocessedImage);
+
+    // Create SYCL queue
+    sycl::queue queue;
+
+    // Assign memory for input tensor
+    size_t inputTensorSize = preprocessedImage.total();
+    sycl::buffer<float, 1> inputBuffer(inputTensorValues.data(), sycl::range<1>(inputTensorSize));
+
+    // Copy input data to device
+    queue.submit([&](sycl::handler& cgh) {
+        auto accessor = inputBuffer.get_access<sycl::access::mode::write>(cgh);
+        cgh.copy(preprocessedImage.ptr<float>(), accessor);
+    });
+
+    // Wait for the copy to complete
+    queue.wait();
+}
